@@ -1,0 +1,66 @@
+import numpy as np
+
+class NeuralNetwork:
+    def __init__(self, input_size, hidden_size, output_size):
+        # Initialize weights
+        self.W1 = np.random.randn(input_size, hidden_size) * 0.01
+        self.W2 = np.random.randn(hidden_size, output_size) * 0.01
+
+    def forward(self, X):
+        # Forward pass
+        self.Z1 = np.dot(X, self.W1)
+        self.A1 = self.sigmoid(self.Z1)
+        self.Z2 = np.dot(self.A1, self.W2)
+        self.A2 = self.sigmoid(self.Z2)
+        return self.A2
+
+    def sigmoid(self, z):
+        return 1 / (1 + np.exp(-z))
+
+    def compute_hessian(self, X, y):
+        # Compute Hessian matrix for the loss function
+        m = X.shape[0]
+        A2 = self.forward(X)
+        dA2 = A2 - y
+        dZ2 = dA2 * self.sigmoid_derivative(A2)
+        dW2 = np.dot(self.A1.T, dZ2) / m
+        
+        dA1 = np.dot(dZ2, self.W2.T)
+        dZ1 = dA1 * self.sigmoid_derivative(self.A1)
+        dW1 = np.dot(X.T, dZ1) / m
+        
+        hessian_W1 = np.dot(dW1.T, dW1) / m
+        hessian_W2 = np.dot(dW2.T, dW2) / m
+        
+        return hessian_W1, hessian_W2
+
+    def sigmoid_derivative(self, z):
+        return z * (1 - z)
+
+    def prune_weights(self, threshold=0.1):
+        # Prune weights based on Hessian
+        hessian_W1, hessian_W2 = self.compute_hessian(X, y)
+
+        # Prune weights in W1
+        self.W1[np.abs(hessian_W1) < threshold] = 0
+        
+        # Prune weights in W2
+        self.W2[np.abs(hessian_W2) < threshold] = 0
+
+# Example usage
+input_size = 10
+hidden_size = 5
+output_size = 1
+
+# Create a neural network
+nn = NeuralNetwork(input_size, hidden_size, output_size)
+
+# Generate some random data
+X = np.random.randn(100, input_size)
+y = np.random.randn(100, output_size)
+
+# Forward pass
+output = nn.forward(X)
+
+# Prune weights
+nn.prune_weights(threshold=0.1)
