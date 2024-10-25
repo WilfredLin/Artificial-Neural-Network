@@ -1,0 +1,36 @@
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+
+# Constants
+INPUT_DIM = 10  # Number of input features
+HIDDEN_UNITS = 64  # Number of neurons in the hidden layer
+OUTPUT_DIM = 1  # Output dimension (e.g., prediction)
+
+# Create a physics-inspired neural network model
+model = keras.Sequential([
+    layers.Input(shape=(INPUT_DIM,)),
+    layers.Dense(HIDDEN_UNITS, activation='relu'),
+    layers.Dense(OUTPUT_DIM)
+])
+
+# Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+
+# Generate synthetic data inspired by a physics problem (e.g., simple harmonic motion)
+def generate_data(samples):
+    x = np.random.rand(samples, INPUT_DIM)  # Random input features
+    y = np.sin(2 * np.pi * x[:, 0]) * np.exp(-x[:, 1])  # Example target based on physics
+    return x, y
+
+# Generate training data
+x_train, y_train = generate_data(1000)
+
+# Train the model
+model.fit(x_train, y_train, epochs=50, batch_size=32, validation_split=0.2)
+
+# Generate test data and evaluate the model
+x_test, y_test = generate_data(200)
+loss, mae = model.evaluate(x_test, y_test)
+print(f'Loss: {loss}, Mean Absolute Error: {mae}')
